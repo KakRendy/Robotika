@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Modul Interaktif Forward Kinematics 1–4 DOF</title>
+<style>
+:root{--ink:#172334;--muted:#5b6675;--line:#d9e1ea;--bg:#f3f6fa;--blue:#175cd3;--pale:#eaf2ff;--teal:#087e8b;--orange:#d97706;--green:#16803c}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.58 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+header{background:linear-gradient(135deg,#15253d,#17508a);color:white;padding:32px 18px}header .inner,main,footer{max-width:1180px;margin:auto}header h1{font-size:clamp(1.8rem,4vw,2.7rem);line-height:1.15;margin:8px 0 12px}header p{max-width:900px;color:#e3edfc;margin:0}.tag{display:inline-block;border:1px solid #91b5e4;border-radius:30px;padding:3px 10px;text-transform:uppercase;font-size:.76rem;letter-spacing:.06em}
+main{padding:18px}.nav{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 18px}.nav a{background:white;color:#174b8e;border:1px solid var(--line);border-radius:9px;text-decoration:none;padding:7px 11px;font-size:.92rem}
+section,.panel{background:white;border:1px solid var(--line);border-radius:15px;padding:20px;margin-bottom:17px;box-shadow:0 3px 14px rgba(20,40,70,.035)}
+h2{font-size:1.42rem;margin:0 0 10px;line-height:1.3}h3{font-size:1.08rem;margin:18px 0 8px}p{margin:8px 0 12px}.muted,small{color:var(--muted)}.eyebrow{font-size:.8rem;color:var(--teal);font-weight:800;letter-spacing:.06em;text-transform:uppercase}
+.notice{background:#fff4d6;border:1px solid #ebce7b;border-radius:10px;padding:12px 14px;margin:12px 0}.info{background:var(--pale);border:1px solid #c9dcff;border-radius:10px;padding:12px 14px;margin:12px 0}
+.dof-pick{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.dof-btn{background:#f7f9fc;color:#223149;border:1px solid var(--line);border-radius:12px;padding:14px 8px;text-align:center}.dof-btn strong{display:block;font-size:1.25rem}.dof-btn.active{background:var(--pale);border:2px solid var(--blue);color:#124aa6}
+.simgrid{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(320px,.85fr);gap:15px;align-items:start}
+#armCanvas{width:100%;height:auto;display:block;border:1px solid var(--line);border-radius:11px;background:#fbfdff}
+.controls{display:grid;grid-template-columns:1fr 1fr;gap:9px}.control{border:1px solid var(--line);border-radius:10px;padding:10px}.control label{display:flex;justify-content:space-between;gap:6px;font-weight:700;font-size:.92rem}.control input[type=range]{width:100%;accent-color:var(--blue);margin:10px 0 3px}.control input[type=number]{width:86px;max-width:100%;border:1px solid #cbd5e1;border-radius:6px;padding:5px;font:inherit}
+button{font:inherit;font-weight:700;border:0;border-radius:9px;padding:9px 12px;background:var(--blue);color:white;cursor:pointer}button.secondary{background:#e9eef5;color:#243247;border:1px solid #d5dee8}button:hover{filter:brightness(.97)}.btnrow{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}
+.outputs{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.out{border:1px solid var(--line);border-radius:10px;padding:10px}.out span{display:block;color:var(--muted);font-size:.8rem}.out strong{font-size:1.1rem;font-variant-numeric:tabular-nums}
+.formula{background:#f7f9fc;border:1px solid var(--line);border-radius:10px;padding:12px;overflow-x:auto;font:1.02rem Georgia,"Times New Roman",serif}.code{font: .88rem ui-monospace,SFMono-Regular,Consolas,monospace;white-space:pre-wrap;background:#111b2a;color:#e9f0fb;padding:12px;border-radius:10px;overflow:auto}
+table{width:100%;border-collapse:collapse;margin:10px 0;font-size:.94rem}th,td{border:1px solid var(--line);padding:8px;text-align:left}th{background:#eff4f9}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:15px}.quizline{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:10px 0}.quizline select,.quizline input{font:inherit;border:1px solid #cbd5e1;border-radius:7px;padding:7px}.good{color:var(--green);font-weight:700}.bad{color:#b42318;font-weight:700}
+footer{padding:0 18px 28px;color:var(--muted);font-size:.9rem}
+@media(max-width:850px){.simgrid,.two{grid-template-columns:1fr}}@media(max-width:560px){main{padding:10px}.dof-pick{grid-template-columns:repeat(2,1fr)}section,.panel{padding:14px}.controls{grid-template-columns:1fr}.outputs{grid-template-columns:1fr 1fr}}
+@media print{body{background:white}.nav,.btnrow,button{display:none!important}section,.panel{box-shadow:none}header{background:white;color:#111}header p{color:#333}}
+</style>
+</head>
+<body>
+<header><div class="inner">
+<span class="tag">Modul pembelajaran interaktif</span>
+<h1>Forward Kinematics Lengan Robot 1–4 DOF</h1>
+<p>Pelajari hubungan sudut sendi, panjang link, dan posisi ujung lengan robot melalui model matematis dan simulator yang dapat diubah langsung di browser.</p>
+</div></header>
+<main>
+<div class="nav"><a href="#konsep">Konsep</a><a href="#simulator">Simulator</a><a href="#rumus">Rumus</a><a href="#latihan">Latihan</a><a href="#tugas">Tugas</a></div>
+
+<section id="konsep">
+<div class="eyebrow">01 · konsep dasar</div><h2>Apa arti DOF?</h2>
+<p><strong>DOF (Degree of Freedom)</strong> adalah jumlah gerakan independen yang dapat dilakukan sistem. Pada modul ini, setiap DOF berarti satu sendi rotasi (revolute joint) pada lengan robot planar.</p>
+<div class="notice"><strong>Asumsi model:</strong> seluruh lengan bergerak pada bidang XY. Setiap link dianggap kaku dan setiap sendi berputar pada sumbu yang tegak lurus bidang tersebut. Model ini ideal untuk memulai perhitungan Forward Kinematics.</div>
+<table><thead><tr><th>Model</th><th>Struktur</th><th>Yang dipelajari</th></tr></thead><tbody>
+<tr><td><strong>1 DOF</strong></td><td>1 sendi, 1 link</td><td>Rotasi satu sendi dan lintasan melingkar ujung lengan.</td></tr>
+<tr><td><strong>2 DOF</strong></td><td>2 sendi, 2 link</td><td>Sudut relatif antar-link dan posisi ujung lengan pada bidang.</td></tr>
+<tr><td><strong>3 DOF</strong></td><td>3 sendi, 3 link</td><td>Penjumlahan sudut kumulatif serta efek sendi tambahan.</td></tr>
+<tr><td><strong>4 DOF</strong></td><td>4 sendi, 4 link</td><td>Rantai kinematika lebih panjang dan pengaruh tiap sendi pada ujung lengan.</td></tr>
+</tbody></table>
+<div class="info"><strong>Penting:</strong> 3 DOF tidak otomatis berarti lengan bisa menjangkau seluruh ruang 3D. Pada modul ini, ketiga sendi berada pada bidang yang sama, sehingga geraknya tetap planar. Untuk mengatur posisi 3D, sumbu-sumbu sendi perlu memiliki orientasi ruang yang sesuai.</div>
+</section>
+
+<section id="simulator">
+<div class="eyebrow">02 · simulator</div><h2>Ubah model, sudut, dan panjang link</h2>
+<p>Pilih jumlah DOF, kemudian geser sudut sendi atau ubah panjang link. Posisi setiap joint dan ujung lengan dihitung otomatis.</p>
+<div class="dof-pick" role="group" aria-label="Pilih jumlah DOF">
+<button class="dof-btn active" data-dof="1"><strong>1 DOF</strong><small>1 joint · 1 link</small></button>
+<button class="dof-btn" data-dof="2"><strong>2 DOF</strong><small>2 joint · 2 link</small></button>
+<button class="dof-btn" data-dof="3"><strong>3 DOF</strong><small>3 joint · 3 link</small></button>
+<button class="dof-btn" data-dof="4"><strong>4 DOF</strong><small>4 joint · 4 link</small></button>
+</div>
+<div class="simgrid" style="margin-top:15px">
+<div class="panel">
+<h3 style="margin-top:0">Diagram lengan robot planar</h3>
+<canvas id="armCanvas" width="760" height="490" aria-label="Diagram interaktif lengan robot planar"></canvas>
+<p class="muted"><small>O = base, J1–J4 = sendi, EE = ujung lengan. Panjang link menggunakan satuan sentimeter.</small></p>
+<div class="btnrow"><button id="reset" class="secondary">Reset konfigurasi</button><button id="example">Terapkan pose contoh</button><button id="animate">Animasi</button><button id="stop" class="secondary">Stop animasi</button></div>
+<h3>Hasil posisi ujung lengan</h3>
+<div class="outputs"><div class="out"><span>Koordinat X</span><strong id="outX">—</strong><small>cm</small></div><div class="out"><span>Koordinat Y</span><strong id="outY">—</strong><small>cm</small></div><div class="out"><span>Orientasi ujung φ</span><strong id="outPhi">—</strong><small>derajat</small></div></div>
+<h3>Koordinat setiap joint</h3>
+<table><thead><tr><th>Titik</th><th>X (cm)</th><th>Y (cm)</th></tr></thead><tbody id="coordRows"></tbody></table>
+</div>
+<div class="panel">
+<h3 style="margin-top:0">Kontrol sendi</h3>
+<div class="controls" id="jointControls">
+<div class="control" data-joint="0"><label for="q0">Joint 1 <span id="qval0">30°</span></label><input id="q0" type="range" min="-180" max="180" value="30" step="1"><small>Sudut relatif terhadap sumbu X.</small></div>
+<div class="control" data-joint="1" hidden><label for="q1">Joint 2 <span id="qval1">45°</span></label><input id="q1" type="range" min="-180" max="180" value="45" step="1"><small>Sudut relatif terhadap link sebelumnya.</small></div>
+<div class="control" data-joint="2" hidden><label for="q2">Joint 3 <span id="qval2">-30°</span></label><input id="q2" type="range" min="-180" max="180" value="-30" step="1"><small>Sudut relatif terhadap link sebelumnya.</small></div>
+<div class="control" data-joint="3" hidden><label for="q3">Joint 4 <span id="qval3">20°</span></label><input id="q3" type="range" min="-180" max="180" value="20" step="1"><small>Sudut relatif terhadap link sebelumnya.</small></div>
+</div>
+<h3>Panjang setiap link</h3>
+<div class="controls" id="lengthControls">
+<div class="control" data-link="0"><label for="l0">Link 1</label><input id="l0" type="number" min="1" max="50" step="1" value="12"> <small>cm</small></div>
+<div class="control" data-link="1" hidden><label for="l1">Link 2</label><input id="l1" type="number" min="1" max="50" step="1" value="10"> <small>cm</small></div>
+<div class="control" data-link="2" hidden><label for="l2">Link 3</label><input id="l2" type="number" min="1" max="50" step="1" value="8"> <small>cm</small></div>
+<div class="control" data-link="3" hidden><label for="l3">Link 4</label><input id="l3" type="number" min="1" max="50" step="1" value="6"> <small>cm</small></div>
+</div>
+<div class="info"><strong>Konvensi sudut:</strong> q₁ diukur dari sumbu X positif. q₂, q₃, dan q₄ adalah sudut relatif terhadap link sebelumnya. Karena itu, orientasi absolut link ke-i adalah penjumlahan sudut dari joint pertama sampai joint ke-i.</div>
+</div>
+</div>
+</section>
+
+<section id="rumus">
+<div class="eyebrow">03 · model matematis</div><h2>Rumus Forward Kinematics</h2>
+<p>Untuk lengan planar dengan panjang link \(L_i\) dan sudut sendi relatif \(q_i\), sudut absolut link ke-i adalah:</p>
+<div class="formula">φᵢ = q₁ + q₂ + ⋯ + qᵢ</div>
+<p>Posisi ujung lengan diperoleh dengan menjumlahkan proyeksi horizontal dan vertikal seluruh link:</p>
+<div class="formula">x = Σ Lᵢ cos(φᵢ)<br>y = Σ Lᵢ sin(φᵢ)<br>φ<sub>EE</sub> = q₁ + q₂ + ⋯ + qₙ</div>
+<p>Sudut pada perhitungan trigonometri harus menggunakan satuan radian jika dihitung dengan fungsi matematika pemrograman. Secara manual, kalkulator dapat diatur ke derajat.</p>
+<h3>Persamaan khusus tiap model</h3>
+<div class="two">
+<div><h4>1 DOF</h4><div class="formula">x = L₁ cos(q₁)<br>y = L₁ sin(q₁)</div><p>Ujung link berada pada lingkaran dengan jari-jari L₁ dari titik base.</p></div>
+<div><h4>2 DOF</h4><div class="formula">x = L₁ cos(q₁) + L₂ cos(q₁+q₂)<br>y = L₁ sin(q₁) + L₂ sin(q₁+q₂)</div><p>Posisi link kedua bergantung pada jumlah sudut kedua joint.</p></div>
+<div><h4>3 DOF</h4><div class="formula">x = L₁ cos(q₁) + L₂ cos(q₁+q₂) + L₃ cos(q₁+q₂+q₃)<br><br>y = L₁ sin(q₁) + L₂ sin(q₁+q₂) + L₃ sin(q₁+q₂+q₃)</div><p>Link ketiga menambah jangkauan dan pilihan konfigurasi.</p></div>
+<div><h4>4 DOF</h4><div class="formula">x = Σᵢ₌₁⁴ Lᵢ cos(φᵢ)<br>y = Σᵢ₌₁⁴ Lᵢ sin(φᵢ)<br>φ₄ = q₁+q₂+q₃+q₄</div><p>Rumus umum tetap sama; jumlah komponen bertambah.</p></div>
+</div>
+<h3>Contoh perhitungan 2 DOF</h3>
+<p>Diketahui L₁ = 12 cm, L₂ = 10 cm, q₁ = 30°, dan q₂ = 45°. Maka φ₁ = 30° dan φ₂ = 75°.</p>
+<div class="formula">x = 12 cos 30° + 10 cos 75°<br>≈ 10,392 + 2,588 = 12,980 cm<br><br>y = 12 sin 30° + 10 sin 75°<br>≈ 6,000 + 9,659 = 15,659 cm<br><br>φ<sub>EE</sub> = 30° + 45° = 75°</div>
+<p>Angka ini berlaku untuk konfigurasi contoh tersebut. Simulator di atas menghitung ulang hasil ketika sudut atau panjang link diubah.</p>
+</section>
+
+<section id="latihan">
+<div class="eyebrow">04 · latihan</div><h2>Latihan dan pemeriksaan pemahaman</h2>
+<h3>Latihan 1: pengaruh sudut</h3>
+<ol><li>Pilih model 1 DOF, gunakan L₁ = 12 cm.</li><li>Ubah q₁ dari 0° menjadi 90°, lalu menjadi 180°.</li><li>Catat koordinat X dan Y. Jelaskan mengapa ujung link membentuk lintasan melingkar.</li></ol>
+<h3>Latihan 2: dua sendi</h3>
+<ol><li>Pilih model 2 DOF dengan L₁ = 12 cm dan L₂ = 10 cm.</li><li>Masukkan q₁ = 30° dan q₂ = 45°.</li><li>Hitung X dan Y secara manual, lalu bandingkan dengan simulator.</li><li>Ubah hanya q₂. Jelaskan mengapa posisi link pertama tetap, tetapi posisi ujung lengan berubah.</li></ol>
+<h3>Latihan 3: membandingkan 2, 3, dan 4 DOF</h3>
+<ol><li>Gunakan panjang link yang sama untuk link pertama dan kedua pada semua model.</li><li>Tambahkan link ketiga dan keempat.</li><li>Amati bagaimana sendi tambahan mengubah ruang konfigurasi yang mungkin.</li><li>Jelaskan mengapa jumlah DOF lebih besar tidak berarti semua target posisi selalu dapat dicapai tanpa batasan.</li></ol>
+<h3>Kuis singkat</h3>
+<div class="quizline"><label for="qQuiz">Jika sudut joint diketahui dan kita menghitung posisi ujung lengan, itu disebut:</label><select id="qQuiz"><option value="">Pilih jawaban</option><option value="fk">Forward Kinematics</option><option value="ik">Inverse Kinematics</option></select><button id="checkQuiz">Periksa</button></div><p id="quizResult" aria-live="polite"></p>
+<div class="quizline"><label for="nQuiz">Untuk q₁ = 0° dan L₁ = 12 cm, posisi X pada model 1 DOF adalah (cm):</label><input id="nQuiz" type="number" step="0.1" style="width:100px"><button id="checkNum">Periksa</button></div><p id="numResult" aria-live="polite"></p>
+</section>
+
+<section id="tugas">
+<div class="eyebrow">05 · tugas mahasiswa</div><h2>Tugas: pemodelan matematis lengan robot 1–4 DOF</h2>
+<p><strong>Instruksi:</strong> pelajari keempat model pada simulator dan buat laporan yang menunjukkan bagaimana sudut sendi serta panjang link menentukan posisi ujung lengan.</p>
+<ol>
+<li>Gambarkan diagram lengan untuk 1, 2, 3, dan 4 DOF serta beri label joint dan link.</li>
+<li>Turunkan persamaan Forward Kinematics untuk setiap model.</li>
+<li>Gunakan panjang link L₁ = 12 cm, L₂ = 10 cm, L₃ = 8 cm, dan L₄ = 6 cm.</li>
+<li>Hitung secara manual posisi ujung lengan untuk sekurang-kurangnya dua konfigurasi setiap model.</li>
+<li>Bandingkan hasil perhitungan manual dengan simulator. Sertakan tabel sudut, X, Y, dan orientasi ujung lengan.</li>
+<li>Jelaskan pengaruh penambahan DOF terhadap konfigurasi, jangkauan, dan kompleksitas perhitungan.</li>
+</ol>
+<h3>Luaran</h3>
+<ul><li>Diagram kinematika 1–4 DOF.</li><li>Persamaan matematis tiap model.</li><li>Tabel perhitungan numerik dan hasil simulasi.</li><li>Analisis perbandingan dan kesimpulan.</li></ul>
+<table><thead><tr><th>Aspek penilaian</th><th>Bobot</th></tr></thead><tbody><tr><td>Diagram dan identifikasi joint/link</td><td>20%</td></tr><tr><td>Penurunan persamaan Forward Kinematics</td><td>30%</td></tr><tr><td>Perhitungan numerik</td><td>25%</td></tr><tr><td>Validasi simulator dan analisis</td><td>15%</td></tr><tr><td>Kejelasan laporan</td><td>10%</td></tr></tbody></table>
+<div class="notice"><strong>Batasan:</strong> model ini adalah lengan planar ideal untuk pembelajaran FK. Model tidak mencakup dinamika, torsi, tabrakan, batas mekanis nyata, atau kontrol motor. Jangan menganggapnya sebagai simulator keselamatan untuk robot fisik.</div>
+</section>
+</main>
+<footer>Modul Forward Kinematics 1–4 DOF · HTML, CSS, JavaScript, dan Canvas · Berjalan secara lokal di browser.</footer>
+<script>
+(function(){
+"use strict";
+const $=id=>document.getElementById(id);
+let dof=1,animId=null,animToken=0;
+const qDefaults=[30,45,-30,20],lDefaults=[12,10,8,6];
+const fmt=(n,d=2)=>(Math.abs(n)<0.0005?0:n).toFixed(d);
+function readQ(){return qDefaults.map((v,i)=>Number($("q"+i).value));}
+function readL(){return lDefaults.map((v,i)=>{let n=Number($("l"+i).value);if(!Number.isFinite(n)||n<1)n=1;if(n>50)n=50;$("l"+i).value=n;return n;});}
+function compute(){
+ const q=readQ(),L=readL(),pts=[[0,0]],phiList=[];let phi=0,x=0,y=0;
+ for(let i=0;i<dof;i++){phi+=q[i];phiList.push(phi);x+=L[i]*Math.cos(phi*Math.PI/180);y+=L[i]*Math.sin(phi*Math.PI/180);pts.push([x,y]);}
+ return {q,L,pts,phi:phiList[phiList.length-1]||0,phiList};
+}
+function draw(d){
+ const c=$("armCanvas"),ctx=c.getContext("2d"),w=c.width,h=c.height;ctx.clearRect(0,0,w,h);ctx.fillStyle="#fbfdff";ctx.fillRect(0,0,w,h);
+ const reach=d.L.slice(0,dof).reduce((a,b)=>a+b,0),scale=Math.min((w-180)/(Math.max(reach,1)*1.1),(h-100)/(Math.max(reach,1)*1.05)),ox=100,oy=h-75;
+ const px=p=>({x:ox+p[0]*scale,y:oy-p[1]*scale});
+ // grid and axes
+ ctx.lineWidth=1;ctx.strokeStyle="#e7edf4";
+ for(let k=0;k<=Math.ceil(reach/5)+1;k++){let x=k*5;ctx.beginPath();ctx.moveTo(ox+x*scale,25);ctx.lineTo(ox+x*scale,h-45);ctx.stroke();ctx.beginPath();ctx.moveTo(45,oy-x*scale);ctx.lineTo(w-25,oy-x*scale);ctx.stroke();}
+ ctx.strokeStyle="#b7c3d1";ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(40,oy);ctx.lineTo(w-22,oy);ctx.moveTo(ox, h-35);ctx.lineTo(ox,25);ctx.stroke();
+ ctx.fillStyle="#5b6675";ctx.font="13px system-ui";ctx.fillText("X (cm)",w-75,oy-10);ctx.fillText("Y (cm)",ox+10,30);
+ // links
+ for(let i=0;i<dof;i++){const a=px(d.pts[i]),b=px(d.pts[i+1]);ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.strokeStyle=i%2===0?"#1769aa":"#087e8b";ctx.lineWidth=9;ctx.lineCap="round";ctx.stroke();ctx.lineCap="butt";}
+ // joints and labels
+ d.pts.forEach((p,i)=>{const a=px(p);ctx.beginPath();ctx.arc(a.x,a.y,i===0?9:7,0,Math.PI*2);ctx.fillStyle=i===dof?"#d97706":"#fff";ctx.fill();ctx.lineWidth=2.5;ctx.strokeStyle=i===0?"#243247":"#175cd3";ctx.stroke();ctx.fillStyle="#26364a";ctx.font="bold 13px system-ui";ctx.fillText(i===0?"O":i===dof?"EE":"J"+i,a.x+9,a.y-9);if(i>0){const mid=[(d.pts[i-1][0]+p[0])/2,(d.pts[i-1][1]+p[1])/2],m=px(mid);ctx.font="12px system-ui";ctx.fillStyle="#344054";ctx.fillText("L"+i+" = "+d.L[i-1]+" cm",m.x+4,m.y-5);}});
+ ctx.fillStyle="#5b6675";ctx.font="12px system-ui";ctx.fillText("DOF aktif: "+dof+" · Skala otomatis",15,20);
+}
+function update(){
+ const d=compute();
+ for(let i=0;i<4;i++){ $("qval"+i).textContent=Number($("q"+i).value).toFixed(0)+"°";$("jointControls").querySelector('[data-joint="'+i+'"]').hidden=i>=dof;$("lengthControls").querySelector('[data-link="'+i+'"]').hidden=i>=dof;}
+ document.querySelectorAll(".dof-btn").forEach(b=>{const active=Number(b.dataset.dof)===dof;b.classList.toggle("active",active);b.setAttribute("aria-pressed",String(active));});
+ $("outX").textContent=fmt(d.pts[dof][0]);$("outY").textContent=fmt(d.pts[dof][1]);$("outPhi").textContent=fmt(d.phi,1);
+ $("coordRows").innerHTML=d.pts.map((p,i)=>"<tr><td>"+(i===0?"Base (O)":i===dof?"End-effector": "Joint "+i)+"</td><td>"+fmt(p[0])+"</td><td>"+fmt(p[1])+"</td></tr>").join("");
+ draw(d);
+}
+function setDof(n){stopAnim();dof=n;update();}
+function stopAnim(){animToken++;if(animId!==null)cancelAnimationFrame(animId);animId=null;}
+function setAngles(arr){arr.forEach((v,i)=>$("q"+i).value=v);update();}
+document.querySelectorAll(".dof-btn").forEach(b=>b.addEventListener("click",()=>setDof(Number(b.dataset.dof))));
+for(let i=0;i<4;i++){$("q"+i).addEventListener("input",()=>{stopAnim();update();});$("l"+i).addEventListener("input",()=>{stopAnim();update();});}
+$("reset").addEventListener("click",()=>{stopAnim();qDefaults.forEach((v,i)=>$("q"+i).value=v);lDefaults.forEach((v,i)=>$("l"+i).value=v);update();});
+$("example").addEventListener("click",()=>{stopAnim();setAngles([30,45,-30,20]);});
+$("animate").addEventListener("click",()=>{
+ stopAnim();const token=animToken;let startTime=null;const start=readQ(),targets=[[0,0,0,0],[45,35,-20,15],[-35,65,25,-30],[30,45,-30,20]];let k=0,from=start.slice(),duration=850;
+ function frame(ts){if(token!==animToken)return;if(startTime===null)startTime=ts;const t=Math.min(1,(ts-startTime)/duration),e=t*t*(3-2*t),to=targets[k];setAngles(from.map((v,i)=>v+(to[i]-v)*e));if(t<1)animId=requestAnimationFrame(frame);else{k++;if(k>=targets.length){animId=null;return;}from=to.slice();startTime=null;animId=requestAnimationFrame(frame);}}
+ animId=requestAnimationFrame(frame);
+});
+$("stop").addEventListener("click",stopAnim);
+$("checkQuiz").addEventListener("click",()=>{const r=$("quizResult");if($("qQuiz").value==="fk"){r.textContent="Benar. Forward Kinematics menghitung pose dari sudut joint yang diketahui.";r.className="good";}else if($("qQuiz").value==="ik"){r.textContent="Belum tepat. Inverse Kinematics mencari sudut joint dari pose target.";r.className="bad";}else{r.textContent="Pilih jawaban terlebih dahulu.";r.className="muted";}});
+$("checkNum").addEventListener("click",()=>{const n=Number($("nQuiz").value),r=$("numResult");if($("nQuiz").value!==""&&Math.abs(n-12)<.11){r.textContent="Benar. x = 12 cos(0°) = 12 cm dan y = 0 cm.";r.className="good";}else{r.textContent="Coba lagi. Untuk q₁ = 0°, cos(0°) = 1 sehingga x = L₁ dan y = 0.";r.className="bad";}});
+update();
+})();
+</script>
+</body>
+</html>

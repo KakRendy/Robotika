@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Modul Interaktif Forward Kinematics Franka Panda 7-DOF</title>
+<style>
+:root{--ink:#182230;--muted:#5b6675;--paper:#fff;--bg:#f3f6fa;--line:#dce3eb;--blue:#175cd3;--blue2:#eaf2ff;--teal:#087e8b;--amber:#fff4d6;--amberline:#e9c46a;--green:#16803c;--red:#b42318}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;line-height:1.58}
+header{background:linear-gradient(135deg,#13233c,#173e70);color:#fff;padding:34px 20px 30px}.wrap{max-width:1240px;margin:0 auto;padding:0 18px}
+header h1{font-size:clamp(1.8rem,4vw,2.8rem);line-height:1.15;margin:0 0 12px}header p{max-width:930px;margin:0;color:#e1eafa}.pill{display:inline-block;font-size:.78rem;letter-spacing:.04em;text-transform:uppercase;border:1px solid #8da9d0;border-radius:99px;padding:4px 10px;margin-bottom:12px}
+nav{display:flex;gap:8px;flex-wrap:wrap;margin:18px 0 24px}nav a{color:#15458b;text-decoration:none;background:#fff;border:1px solid var(--line);padding:8px 12px;border-radius:9px;font-size:.92rem}nav a:hover{background:var(--blue2)}
+section,.panel{background:var(--paper);border:1px solid var(--line);border-radius:16px;padding:22px;margin:0 0 18px;box-shadow:0 4px 16px rgba(24,34,48,.035)}
+h2{font-size:1.45rem;margin:0 0 12px;line-height:1.3}h3{font-size:1.08rem;margin:20px 0 8px}h4{margin:14px 0 6px}p{margin:8px 0 12px}small,.muted{color:var(--muted)}
+.callout{background:var(--amber);border:1px solid var(--amberline);border-radius:12px;padding:13px 15px;margin:14px 0}.info{background:var(--blue2);border:1px solid #c9dcff;border-radius:12px;padding:13px 15px;margin:14px 0}
+.cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}.card{border:1px solid var(--line);border-radius:12px;padding:14px;background:#fff}.card strong{display:block;font-size:1.02rem;margin-bottom:5px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}.sim-grid{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(350px,.9fr);gap:16px;align-items:start}
+.btnrow{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}button{border:0;border-radius:9px;padding:9px 13px;font-weight:650;cursor:pointer;background:var(--blue);color:#fff}button.secondary{background:#e8edf4;color:#233146;border:1px solid #d3dce7}button.teal{background:var(--teal)}button:hover{filter:brightness(.96)}
+table{width:100%;border-collapse:collapse;margin:12px 0;font-size:.93rem}th,td{border:1px solid var(--line);padding:8px 9px;text-align:left;vertical-align:top}th{background:#f0f4f9;font-weight:700}
+.math{background:#f7f9fc;border:1px solid var(--line);border-radius:10px;padding:12px 14px;overflow-x:auto;margin:10px 0;font-family:Georgia,"Times New Roman",serif;font-size:1.02rem}
+.matrix{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:.84rem;white-space:pre;overflow:auto;background:#101827;color:#e8eef8;padding:12px;border-radius:10px;line-height:1.55}
+#armCanvas{display:block;width:100%;height:auto;border:1px solid #dce3eb;border-radius:12px;background:linear-gradient(#fbfdff,#f2f6fa)}
+.joint-controls{display:grid;grid-template-columns:1fr 1fr;gap:10px}.joint-control{border:1px solid var(--line);border-radius:10px;padding:10px}.joint-control label{display:flex;justify-content:space-between;gap:8px;font-weight:700;font-size:.92rem}.joint-control input[type=range]{width:100%;margin:10px 0 3px;accent-color:var(--blue)}
+.dh-input{width:76px;max-width:100%;padding:6px 4px;border:1px solid #ccd5e0;border-radius:6px;background:#fff}.output-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.output{border:1px solid var(--line);border-radius:10px;padding:10px}.output span{display:block;color:var(--muted);font-size:.8rem}.output strong{font-size:1.1rem;font-variant-numeric:tabular-nums}
+details{border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin:10px 0}summary{font-weight:700;cursor:pointer}input[type=number],select{font:inherit;border:1px solid #ccd5e0;border-radius:7px;padding:7px;background:#fff}
+.quiz-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:8px 0}.good{color:var(--green);font-weight:700}.bad{color:var(--red);font-weight:700}.kicker{font-size:.82rem;text-transform:uppercase;letter-spacing:.06em;color:var(--teal);font-weight:750}
+ul,ol{padding-left:1.35rem}li{margin:5px 0}footer{padding:12px 0 35px;color:var(--muted);font-size:.9rem}a{color:#175cd3}
+@media(max-width:900px){.sim-grid,.grid2{grid-template-columns:1fr}.cards{grid-template-columns:1fr}}@media(max-width:560px){section,.panel{padding:15px}.joint-controls{grid-template-columns:1fr}.output-grid{grid-template-columns:1fr 1fr}table{font-size:.82rem}th,td{padding:6px}}
+@media print{body{background:#fff}nav,.btnrow,button,.joint-controls{display:none!important}section,.panel{box-shadow:none;break-inside:avoid}header{background:#fff;color:#111;padding:12px 0}header p{color:#333}}
+</style>
+</head>
+<body>
+<header><div class="wrap">
+  <span class="pill">Modul kuliah · robotika dasar</span>
+  <h1>Forward Kinematics Franka Panda 7-DOF</h1>
+  <p>Soal tugas, materi matematis, tabel Modified Denavit–Hartenberg (MDH), contoh numerik, dan simulator interaktif untuk mempelajari hubungan sudut tujuh sendi dengan pose ujung lengan robot.</p>
+</div></header>
+<main class="wrap">
+<nav aria-label="Navigasi modul"><a href="#tujuan">Tujuan</a><a href="#tugas">Soal tugas</a><a href="#materi">Materi matematis</a><a href="#simulator">Simulator interaktif</a><a href="#latihan">Latihan</a><a href="#rubrik">Rubrik</a></nav>
+
+<div class="callout"><strong>Catatan model:</strong> modul ini menggunakan parameter Modified DH yang umum dipakai untuk memodelkan rantai kinematika Franka Panda. Implementasi simulator Rocksi dapat memakai frame dasar, konvensi, atau tool frame yang berbeda. Karena itu, sebelum mengklaim hasil identik dengan Rocksi, cocokkan varian model dan definisi frame yang ditampilkan. Simulator HTML ini adalah model matematis untuk belajar, bukan salinan CAD atau alat kendali robot fisik.</div>
+
+<section id="tujuan">
+<div class="kicker">01 · orientasi</div><h2>Tujuan pembelajaran</h2>
+<div class="cards">
+<div class="card"><strong>Menganalisis 7-DOF</strong>Mengidentifikasi tujuh sendi rotasi, link, frame dasar, flange, dan hand mount.</div>
+<div class="card"><strong>Membangun model kinematika</strong>Menyusun parameter MDH dan matriks transformasi homogen secara konsisten.</div>
+<div class="card"><strong>Menghitung pose end-effector</strong>Mendapatkan posisi dan orientasi dari tujuh sudut joint yang diketahui.</div>
+</div>
+<h3>Forward Kinematics dan Inverse Kinematics</h3>
+<table><thead><tr><th>Metode</th><th>Input</th><th>Output</th></tr></thead><tbody>
+<tr><td><strong>Forward Kinematics (FK)</strong></td><td>Tujuh sudut joint dan geometri robot</td><td>Posisi serta orientasi flange/end-effector</td></tr>
+<tr><td><strong>Inverse Kinematics (IK)</strong></td><td>Pose target end-effector</td><td>Satu atau lebih konfigurasi sudut joint yang mencapai target</td></tr>
+</tbody></table>
+<div class="info"><strong>Fokus tugas adalah FK.</strong> Mahasiswa tidak diwajibkan mencari sudut dari koordinat target. Mereka harus menghitung bagaimana tujuh sudut rotasi dan geometri robot menghasilkan posisi dan orientasi ujung lengan.</div>
+</section>
+
+<section id="tugas">
+<div class="kicker">02 · instruksi mahasiswa</div><h2>Soal tugas: pemodelan matematis kinematika maju Franka Panda 7-DOF</h2>
+<p><strong>Kasus:</strong> Gunakan model Franka Panda pada simulator <a href="https://rocksi.net/" target="_blank" rel="noopener">Rocksi</a>. Buat model matematis yang menghitung pose ujung lengan berdasarkan sudut tujuh sendi.</p>
+<h3>Instruksi pengerjaan</h3>
+<ol>
+<li>Amati model Franka di simulator. Catat nama model, tujuh joint, jenis joint, base, link, flange, dan end-effector/tool jika terlihat.</li>
+<li>Buat diagram kinematika berlabel dari base sampai joint 7. Tunjukkan arah sumbu rotasi tiap joint dan frame koordinat yang digunakan.</li>
+<li>Gunakan parameter Modified Denavit–Hartenberg (MDH) yang disediakan dalam modul sebagai titik awal. Jelaskan arti parameter \(a_i,d_i,\alpha_i,\theta_i\) dan konvensi matriks yang dipakai.</li>
+<li>Tuliskan matriks transformasi \(A_1,\ldots,A_7\) menggunakan sudut joint yang ditentukan.</li>
+<li>Hitung transformasi total dari base ke frame 7: \(T_{07}=A_1A_2\cdots A_7\).</li>
+<li>Ambil posisi dari kolom keempat matriks \(T_{07}\) dan orientasi dari submatriks rotasi 3×3.</li>
+<li>Tambahkan transformasi tool/hand mount bila titik yang dibandingkan dengan simulator bukan frame 7. Jelaskan offset yang digunakan.</li>
+<li>Lakukan perhitungan numerik dengan konfigurasi sudut yang dipilih, tampilkan perhitungan per tahap dan hasil akhir dengan satuan meter serta derajat/radian.</li>
+<li>Uji sudut yang sama di Rocksi. Bandingkan hasil dan analisis perbedaan frame, offset, geometri, atau batas joint.</li>
+</ol>
+<h3>Luaran yang dikumpulkan</h3>
+<ul><li>Diagram kinematika dengan tujuh joint dan sumbu rotasi.</li><li>Tabel parameter MDH dan sumber/penjelasan parameternya.</li><li>Persamaan matriks transformasi dan perkalian berurutan.</li><li>Contoh perhitungan numerik posisi serta orientasi flange/end-effector.</li><li>Tangkapan layar Rocksi untuk konfigurasi yang sama dan analisis validasi.</li></ul>
+<div class="callout"><strong>Catatan:</strong> Model Franka Panda memiliki tujuh DOF. Jangan menyalin parameter Niryo atau memakai tabel DH standar dengan rumus MDH. Parameter dan konvensi harus cocok satu sama lain.</div>
+</section>
+
+<section id="materi">
+<div class="kicker">03 · materi perhitungan</div><h2>Materi matematis lengkap</h2>
+<h3>1. Sudut derajat ke radian</h3>
+<div class="math">θ (rad) = θ (°) × π / 180</div>
+<p>Contoh: −45° = −45π/180 = −π/4 ≈ −0,7854 rad.</p>
+
+<h3>2. Parameter Modified Denavit–Hartenberg (MDH)</h3>
+<p>Tabel berikut adalah satu parameterisasi MDH yang umum digunakan untuk rantai Franka Panda. Panjang dalam meter, sudut dalam derajat. Nilai \(\theta_i\) adalah variabel joint; simulator interaktif juga menyediakan offset sudut yang dapat diedit.</p>
+<table><thead><tr><th>Joint i</th><th>aᵢ (m)</th><th>dᵢ (m)</th><th>αᵢ</th><th>θᵢ</th></tr></thead><tbody>
+<tr><td>1</td><td>0</td><td>0,333</td><td>0°</td><td>q₁</td></tr>
+<tr><td>2</td><td>0</td><td>0</td><td>−90°</td><td>q₂</td></tr>
+<tr><td>3</td><td>0</td><td>0,316</td><td>90°</td><td>q₃</td></tr>
+<tr><td>4</td><td>0,0825</td><td>0</td><td>90°</td><td>q₄</td></tr>
+<tr><td>5</td><td>−0,0825</td><td>0,384</td><td>−90°</td><td>q₅</td></tr>
+<tr><td>6</td><td>0</td><td>0</td><td>90°</td><td>q₆</td></tr>
+<tr><td>7</td><td>0,088</td><td>0</td><td>90°</td><td>q₇</td></tr>
+</tbody></table>
+<p><strong>Arti parameter:</strong> \(a_i\) adalah jarak sepanjang sumbu x MDH, \(d_i\) adalah offset sepanjang sumbu z sesuai konvensi MDH, \(\alpha_i\) adalah sudut puntir antar-sumbu, dan \(q_i\) adalah sudut rotasi sendi. Penempatan frame menentukan interpretasi parameter; gunakan satu konvensi dari awal hingga akhir.</p>
+
+<h3>3. Matriks transformasi Modified DH</h3>
+<p>Untuk konvensi MDH yang dipakai pada modul ini, transformasi joint ditulis:</p>
+<div class="math">
+Aᵢ = ⎡ cθ   −sθ     0       aᵢ ⎤<br>
+&nbsp;&nbsp;&nbsp;&nbsp;⎢ sθ·cα  cθ·cα  −sα   −dᵢ·sα ⎥<br>
+&nbsp;&nbsp;&nbsp;&nbsp;⎢ sθ·sα  cθ·sα   cα    dᵢ·cα ⎥<br>
+&nbsp;&nbsp;&nbsp;&nbsp;⎣  0      0      0        1 ⎦
+</div>
+<p>dengan \(cθ=\cos θ_i\), \(sθ=\sin θ_i\), \(cα=\cos α_i\), dan \(sα=\sin α_i\). Rumus ini harus digunakan bersama tabel MDH di atas, bukan dicampur dengan rumus DH standar.</p>
+
+<h3>4. Contoh hitung satu matriks</h3>
+<p>Ambil joint 2: \(a_2=0\), \(d_2=0\), \(\alpha_2=-90^\circ\), dan \(q_2=-45^\circ\). Nilai trigonometri:</p>
+<div class="math">cos(−45°)=0,7071; sin(−45°)=−0,7071<br>cos(−90°)=0; sin(−90°)=−1</div>
+<p>Substitusikan ke matriks MDH:</p>
+<div class="matrix">A2 ≈
+[  0.7071   0.7071   0.0000   0.0000 ]
+[  0.0000   0.0000   1.0000   0.0000 ]
+[  0.7071  -0.7071   0.0000   0.0000 ]
+[  0.0000   0.0000   0.0000   1.0000 ]</div>
+<p>Ini hanya matriks joint 2. Posisi dan orientasi akhir baru diperoleh setelah mengalikan ketujuh matriks dalam urutan yang benar.</p>
+
+<h3>5. Transformasi total</h3>
+<div class="math">T₀₇ = A₁ A₂ A₃ A₄ A₅ A₆ A₇</div>
+<p>Bentuk matriks akhirnya:</p>
+<div class="math">
+T₀₇ = ⎡ r₁₁ r₁₂ r₁₃ x₇ ⎤<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;⎢ r₂₁ r₂₂ r₂₃ y₇ ⎥<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;⎢ r₃₁ r₃₂ r₃₃ z₇ ⎥<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;⎣  0   0   0   1  ⎦
+</div>
+<p>Kolom terakhir memberikan posisi frame 7 relatif terhadap base. Submatriks 3×3 kiri atas menyatakan orientasinya.</p>
+
+<h3>6. Flange, hand mount, dan tool point</h3>
+<p>Posisi flange/frame 7 tidak selalu sama dengan titik ujung gripper. Untuk demonstrasi ini, hand mount dimodelkan dengan offset 0,107 m sepanjang sumbu z lokal frame 7, disertai rotasi tetap −45° terhadap sumbu z untuk orientasi hand mount.</p>
+<div class="math">T₀H = T₀₇ × T₇H</div>
+<p>Jika hanya ingin posisi titik hand mount, kalikan transformasi frame 7 dengan titik lokal \([0,0,0.107,1]^T\). Jika simulator menampilkan ujung jari gripper, perlu ditambahkan geometri gripper/finger yang sesuai. Jangan membandingkan dua titik berbeda seolah-olah sama.</p>
+
+<h3>7. Contoh numerik tujuh sendi</h3>
+<p>Gunakan konfigurasi contoh:</p>
+<div class="math">q = [0°, −45°, 0°, −135°, 0°, 90°, 45°]</div>
+<p>Dengan tabel MDH di atas, hasil frame 7 kira-kira:</p>
+<div class="matrix">T07 ≈
+[  0.7071  -0.7071   0.0000   0.3069 ]
+[ -0.7071  -0.7071   0.0000   0.0000 ]
+[  0.0000   0.0000  -1.0000   0.6973 ]
+[  0.0000   0.0000   0.0000   1.0000 ]</div>
+<p>Sehingga posisi frame 7 sekitar \((0.3069, 0, 0.6973)\) meter. Setelah offset 0,107 m sepanjang sumbu z lokal frame 7, posisi hand mount sekitar \((0.3069,0,0.5903)\) meter. Angka dibulatkan; hasil dapat sedikit berbeda karena presisi komputasi atau konvensi frame.</p>
+<div class="info"><strong>Interpretasi:</strong> ini adalah contoh Forward Kinematics. Sudut tujuh sendi diketahui terlebih dahulu, lalu posisi/orientasi dihitung. Ini berbeda dari Inverse Kinematics, yang mencari sudut untuk mencapai target posisi.</div>
+</section>
+
+<section id="simulator">
+<div class="kicker">04 · eksperimen interaktif</div><h2>Simulator FK Franka Panda 7-joint</h2>
+<p>Ubah sudut tujuh joint atau parameter MDH. Visualisasi, posisi frame 7, posisi hand mount, orientasi, dan matriks transformasi akan diperbarui otomatis.</p>
+<div class="callout"><strong>Batas simulasi:</strong> visualisasi adalah proyeksi 3D sederhana, bukan model CAD. Slider memakai rentang sudut praktis yang mendekati batas sendi Panda; periksa dokumentasi model yang dipakai sebelum menjadikannya batas keselamatan atau kontrol nyata.</div>
+<div class="sim-grid">
+<div class="panel">
+<h3 style="margin-top:0">Visualisasi lengan</h3>
+<canvas id="armCanvas" width="780" height="500" aria-label="Visualisasi proyeksi lengan Franka Panda tujuh sendi"></canvas>
+<p class="muted"><small>Garis menggambarkan rantai frame dari base sampai frame 7. Titik oranye menandai hand mount setelah offset 0,107 m.</small></p>
+<div class="btnrow"><button id="resetBtn" class="secondary">Reset sudut</button><button id="sampleBtn">Pose contoh matematis</button><button id="animateBtn" class="teal">Animasi pose</button><button id="stopBtn" class="secondary">Hentikan animasi</button></div>
+<h3>Sudut joint</h3>
+<div class="joint-controls">
+<div class="joint-control"><label for="q0">Joint 1 <span id="qval0">0°</span></label><input id="q0" type="range" min="-166" max="166" value="0" step="1"><small>Rentang slider −166° sampai 166°</small></div>
+<div class="joint-control"><label for="q1">Joint 2 <span id="qval1">-45°</span></label><input id="q1" type="range" min="-101" max="101" value="-45" step="1"><small>Rentang slider −101° sampai 101°</small></div>
+<div class="joint-control"><label for="q2">Joint 3 <span id="qval2">0°</span></label><input id="q2" type="range" min="-166" max="166" value="0" step="1"><small>Rentang slider −166° sampai 166°</small></div>
+<div class="joint-control"><label for="q3">Joint 4 <span id="qval3">-135°</span></label><input id="q3" type="range" min="-176" max="-4" value="-135" step="1"><small>Rentang slider −176° sampai −4°</small></div>
+<div class="joint-control"><label for="q4">Joint 5 <span id="qval4">0°</span></label><input id="q4" type="range" min="-166" max="166" value="0" step="1"><small>Rentang slider −166° sampai 166°</small></div>
+<div class="joint-control"><label for="q5">Joint 6 <span id="qval5">90°</span></label><input id="q5" type="range" min="-1" max="215" value="90" step="1"><small>Rentang slider −1° sampai 215°</small></div>
+<div class="joint-control"><label for="q6">Joint 7 <span id="qval6">45°</span></label><input id="q6" type="range" min="-166" max="166" value="45" step="1"><small>Rentang slider −166° sampai 166°</small></div>
+</div>
+</div>
+<div>
+<div class="panel"><h3 style="margin-top:0">Parameter MDH (dapat diedit)</h3><p class="muted"><small>Jarak dalam meter; α dan offset θ dalam derajat. Ubah parameter hanya untuk eksperimen model.</small></p>
+<div style="overflow-x:auto"><table id="dhTable"><thead><tr><th>i</th><th>aᵢ (m)</th><th>dᵢ (m)</th><th>αᵢ (°)</th><th>Offset θ (°)</th></tr></thead><tbody>
+<tr><td>1</td><td><input class="dh-input" type="number" id="a0" value="0" step="0.001"></td><td><input class="dh-input" type="number" id="d0" value="0.333" step="0.001"></td><td><input class="dh-input" type="number" id="alpha0" value="0" step="5"></td><td><input class="dh-input" type="number" id="off0" value="0" step="5"></td></tr>
+<tr><td>2</td><td><input class="dh-input" type="number" id="a1" value="0" step="0.001"></td><td><input class="dh-input" type="number" id="d1" value="0" step="0.001"></td><td><input class="dh-input" type="number" id="alpha1" value="-90" step="5"></td><td><input class="dh-input" type="number" id="off1" value="0" step="5"></td></tr>
+<tr><td>3</td><td><input class="dh-input" type="number" id="a2" value="0" step="0.001"></td><td><input class="dh-input" type="number" id="d2" value="0.316" step="0.001"></td><td><input class="dh-input" type="number" id="alpha2" value="90" step="5"></td><td><input class="dh-input" type="number" id="off2" value="0" step="5"></td></tr>
+<tr><td>4</td><td><input class="dh-input" type="number" id="a3" value="0.0825" step="0.001"></td><td><input class="dh-input" type="number" id="d3" value="0" step="0.001"></td><td><input class="dh-input" type="number" id="alpha3" value="90" step="5"></td><td><input class="dh-input" type="number" id="off3" value="0" step="5"></td></tr>
+<tr><td>5</td><td><input class="dh-input" type="number" id="a4" value="-0.0825" step="0.001"></td><td><input class="dh-input" type="number" id="d4" value="0.384" step="0.001"></td><td><input class="dh-input" type="number" id="alpha4" value="-90" step="5"></td><td><input class="dh-input" type="number" id="off4" value="0" step="5"></td></tr>
+<tr><td>6</td><td><input class="dh-input" type="number" id="a5" value="0" step="0.001"></td><td><input class="dh-input" type="number" id="d5" value="0" step="0.001"></td><td><input class="dh-input" type="number" id="alpha5" value="90" step="5"></td><td><input class="dh-input" type="number" id="off5" value="0" step="5"></td></tr>
+<tr><td>7</td><td><input class="dh-input" type="number" id="a6" value="0.088" step="0.001"></td><td><input class="dh-input" type="number" id="d6" value="0" step="0.001"></td><td><input class="dh-input" type="number" id="alpha6" value="90" step="5"></td><td><input class="dh-input" type="number" id="off6" value="0" step="5"></td></tr>
+</tbody></table></div>
+<button id="defaultDhBtn" class="secondary">Kembalikan parameter Panda</button>
+</div>
+<div class="panel"><h3 style="margin-top:0">Hasil FK: frame 7 / flange</h3>
+<div class="output-grid">
+<div class="output"><span>X₇ (m)</span><strong id="outX7">—</strong></div><div class="output"><span>Y₇ (m)</span><strong id="outY7">—</strong></div><div class="output"><span>Z₇ (m)</span><strong id="outZ7">—</strong></div>
+<div class="output"><span>Roll (°)</span><strong id="outRoll7">—</strong></div><div class="output"><span>Pitch (°)</span><strong id="outPitch7">—</strong></div><div class="output"><span>Yaw (°)</span><strong id="outYaw7">—</strong></div>
+</div>
+<h4>Posisi hand mount (offset 0,107 m)</h4><div class="output-grid"><div class="output"><span>XH (m)</span><strong id="outXH">—</strong></div><div class="output"><span>YH (m)</span><strong id="outYH">—</strong></div><div class="output"><span>ZH (m)</span><strong id="outZH">—</strong></div></div>
+<h4>Matriks transformasi T₀₇</h4><div id="matrixOut" class="matrix">Menunggu perhitungan…</div>
+<details><summary>Lihat koordinat setiap frame</summary><div style="overflow-x:auto"><table id="frameTable"><thead><tr><th>Frame</th><th>X (m)</th><th>Y (m)</th><th>Z (m)</th></tr></thead><tbody></tbody></table></div></details>
+<details><summary>Lihat matriks A₁ sampai A₇</summary><div id="allMatrices"></div></details>
+</div></div></div>
+</section>
+
+<section id="latihan">
+<div class="kicker">05 · latihan mandiri</div><h2>Latihan dan simulasi</h2>
+<h3>Latihan 1: konfigurasi contoh</h3><p>Terapkan konfigurasi berikut, lalu catat posisi frame 7, posisi hand mount, orientasi, dan matriks T₀₇. Lakukan hitungan manual sebelum melihat hasil pada simulator.</p>
+<div class="math">q = [0°, −45°, 0°, −135°, 0°, 90°, 45°]</div><button id="exercise1Btn">Terapkan konfigurasi Latihan 1</button><p id="exercise1Note" class="muted">Belum diterapkan.</p>
+<h3>Latihan 2: pengaruh Joint 1</h3><ol><li>Catat posisi frame 7 ketika q₁ = 0°.</li><li>Ubah hanya q₁ menjadi 90°.</li><li>Jelaskan perubahan x dan y serta mengapa rotasi basis memengaruhi orientasi seluruh rantai.</li></ol>
+<h3>Latihan 3: perbedaan flange dan hand mount</h3><ol><li>Catat koordinat frame 7.</li><li>Catat koordinat hand mount.</li><li>Hitung selisih kedua posisi dan jelaskan mengapa offset tool harus diperhitungkan saat validasi dengan simulator.</li></ol>
+<h3>Latihan 4: kuis singkat</h3>
+<div class="quiz-row"><label for="quizFK">Jika tujuh sudut joint diketahui dan yang dicari posisi end-effector, metode apa yang digunakan?</label><select id="quizFK"><option value="">Pilih jawaban</option><option value="ik">Inverse Kinematics</option><option value="fk">Forward Kinematics</option></select><button id="checkFKBtn">Periksa</button></div><p id="quizFKResult" aria-live="polite"></p>
+<div class="quiz-row"><label for="radQuiz">−45° dalam radian kira-kira:</label><input id="radQuiz" type="number" step="0.01" placeholder="Masukkan nilai"><button id="checkRadBtn">Periksa</button></div><p id="radQuizResult" aria-live="polite"></p>
+<div class="info"><strong>Refleksi:</strong> jelaskan tiga alasan mengapa koordinat HTML dan Rocksi mungkin berbeda: frame dasar/world, parameter geometri atau konvensi transformasi, serta definisi titik akhir (frame 7, hand mount, atau ujung jari gripper).</div>
+</section>
+
+<section id="rubrik">
+<div class="kicker">06 · penilaian</div><h2>Rubrik penilaian yang disarankan</h2>
+<table><thead><tr><th>Komponen</th><th>Bobot</th><th>Kriteria</th></tr></thead><tbody>
+<tr><td>Diagram kinematika</td><td>15%</td><td>Tujuh joint, link, sumbu rotasi, dan frame digambarkan jelas.</td></tr>
+<tr><td>Parameter MDH</td><td>20%</td><td>Parameter dan konvensi konsisten; satuan serta sumber dijelaskan.</td></tr>
+<tr><td>Matriks transformasi</td><td>25%</td><td>Persamaan Aᵢ dan perkalian T₀₇ benar serta runtut.</td></tr>
+<tr><td>Contoh numerik</td><td>20%</td><td>Konversi sudut, hasil posisi dan orientasi, serta pembulatan dijelaskan.</td></tr>
+<tr><td>Validasi dan analisis</td><td>20%</td><td>Konfigurasi yang sama diuji di Rocksi; perbedaan frame/tool dianalisis.</td></tr>
+</tbody></table>
+<h3>Rujukan model</h3><ul>
+<li><a href="https://www.franka.de/" target="_blank" rel="noopener">Franka Robotics</a> — informasi umum robot Panda.</li>
+<li><a href="https://github.com/frankaemika/franka_ros" target="_blank" rel="noopener">Repositori model ROS Franka</a> — rujukan deskripsi robot/URDF; cocokkan versi dan frame yang digunakan.</li>
+<li><a href="https://rocksi.net/" target="_blank" rel="noopener">Rocksi</a> — simulator untuk pengamatan dan validasi.</li>
+</ul>
+<p class="muted"><small>Parameter MDH merupakan satu representasi kinematika. URDF dapat menggunakan transformasi origin dan sumbu joint secara langsung, sehingga tabel DH yang diturunkan dari frame berbeda mungkin tampak berbeda tetapi tetap merepresentasikan robot yang sama jika transformasinya konsisten.</small></p>
+</section>
+<footer>Modul pembelajaran Forward Kinematics Franka Panda. Seluruh perhitungan berjalan di browser; halaman ini tidak mengendalikan robot fisik dan tidak mengirim data ke server.</footer>
+</main>
+<script>
+(function(){
+"use strict";
+const defaultDH=[
+{a:0,d:0.333,alpha:0,off:0},
+{a:0,d:0,alpha:-90,off:0},
+{a:0,d:0.316,alpha:90,off:0},
+{a:0.0825,d:0,alpha:90,off:0},
+{a:-0.0825,d:0.384,alpha:-90,off:0},
+{a:0,d:0,alpha:90,off:0},
+{a:0.088,d:0,alpha:90,off:0}
+];
+const defaultQ=[0,-45,0,-135,0,90,45];
+const $=id=>document.getElementById(id),rad=d=>d*Math.PI/180,deg=r=>r*180/Math.PI;
+const fmt=(v,n=4)=>(Math.abs(v)<0.00005?0:v).toFixed(n);
+let animFrame=null,animToken=0;
+function identity(){return [[1,0,0,0],[0,1,0,0],[0,0,1,0],[0,0,0,1]];}
+function multiply(A,B){const C=Array.from({length:4},()=>Array(4).fill(0));for(let i=0;i<4;i++)for(let j=0;j<4;j++)for(let k=0;k<4;k++)C[i][j]+=A[i][k]*B[k][j];return C;}
+function mdh(thetaDeg,d,a,alphaDeg){
+ const t=rad(thetaDeg),al=rad(alphaDeg),ct=Math.cos(t),st=Math.sin(t),ca=Math.cos(al),sa=Math.sin(al);
+ return [[ct,-st,0,a],[st*ca,ct*ca,-sa,-d*sa],[st*sa,ct*sa,ca,d*ca],[0,0,0,1]];
+}
+function getQ(){return Array.from({length:7},(_,i)=>Number($("q"+i).value));}
+function getDH(){return Array.from({length:7},(_,i)=>({a:Number($("a"+i).value)||0,d:Number($("d"+i).value)||0,alpha:Number($("alpha"+i).value)||0,off:Number($("off"+i).value)||0}));}
+function compute(){
+ const q=getQ(),dh=getDH();let T=identity();const frames=[[0,0,0]],mats=[];
+ for(let i=0;i<7;i++){const A=mdh(q[i]+dh[i].off,dh[i].d,dh[i].a,dh[i].alpha);mats.push(A);T=multiply(T,A);frames.push([T[0][3],T[1][3],T[2][3]]);}
+ const R=[[T[0][0],T[0][1],T[0][2]],[T[1][0],T[1][1],T[1][2]],[T[2][0],T[2][1],T[2][2]]];
+ const pitch=Math.asin(Math.max(-1,Math.min(1,-R[2][0])));let roll,yaw;
+ if(Math.abs(Math.cos(pitch))>1e-7){roll=Math.atan2(R[2][1],R[2][2]);yaw=Math.atan2(R[1][0],R[0][0]);}
+ else{roll=Math.atan2(-R[1][2],R[1][1]);yaw=0;}
+ const tool=[T[0][3]+T[0][2]*0.107,T[1][3]+T[1][2]*0.107,T[2][3]+T[2][2]*0.107];
+ const handT=multiply(T,[[Math.cos(-Math.PI/4),-Math.sin(-Math.PI/4),0,0],[Math.sin(-Math.PI/4),Math.cos(-Math.PI/4),0,0],[0,0,1,0.107],[0,0,0,1]]);
+ return {q,dh,T,frames,mats,rpy:[deg(roll),deg(pitch),deg(yaw)],tool,handT};
+}
+function matrixString(M){return M.map(row=>"[ "+row.map(v=>fmt(v,4).padStart(8," ")).join("  ")+" ]").join("\n");}
+function renderFrames(frames){$("frameTable").querySelector("tbody").innerHTML=frames.map((p,i)=>"<tr><td>"+(i===0?"Base":"Frame "+i)+"</td><td>"+fmt(p[0])+"</td><td>"+fmt(p[1])+"</td><td>"+fmt(p[2])+"</td></tr>").join("");}
+function renderMatrices(mats){$("allMatrices").innerHTML=mats.map((M,i)=>"<h4>A"+(i+1)+"</h4><div class='matrix'>"+matrixString(M)+"</div>").join("");}
+function project(p,scale,cx,cy){return {x:cx+(p[0]-p[1])*scale*.68,y:cy-p[2]*scale+(p[0]+p[1])*scale*.24};}
+function line(ctx,p1,p2,projectFn,color,width=1){const a=projectFn(p1),b=projectFn(p2);ctx.strokeStyle=color;ctx.lineWidth=width;ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();}
+function draw(data){
+ const canvas=$("armCanvas"),ctx=canvas.getContext("2d"),w=canvas.width,h=canvas.height;ctx.clearRect(0,0,w,h);ctx.fillStyle="#f8fbff";ctx.fillRect(0,0,w,h);
+ const reach=data.dh.reduce((s,r)=>s+Math.abs(r.a)+Math.abs(r.d),0)+.107,scale=Math.min(w/(Math.max(reach,0.7)*2.2),h/(Math.max(reach,0.7)*1.5)),cx=w*.5,cy=h*.79,pr=p=>project(p,scale,cx,cy),extent=Math.max(.5,reach*.72);
+ for(let k=-4;k<=4;k++){const v=extent*k/4;line(ctx,[-extent,v,0],[extent,v,0],pr,"#e1e8f0",1);line(ctx,[v,-extent,0],[v,extent,0],pr,"#e1e8f0",1);}
+ line(ctx,[0,0,0],[extent*.32,0,0],pr,"#d04444",2);line(ctx,[0,0,0],[0,extent*.32,0],pr,"#16834a",2);line(ctx,[0,0,0],[0,0,extent*.32],pr,"#2463eb",2);
+ let p=pr([extent*.36,0,0]);ctx.fillStyle="#b42318";ctx.font="13px system-ui";ctx.fillText("X",p.x,p.y);p=pr([0,extent*.36,0]);ctx.fillStyle="#16803c";ctx.fillText("Y",p.x,p.y);p=pr([0,0,extent*.36]);ctx.fillStyle="#175cd3";ctx.fillText("Z",p.x,p.y);
+ const pts=data.frames;for(let i=0;i<pts.length-1;i++)line(ctx,pts[i],pts[i+1],pr,i<3?"#1769aa":"#087e8b",5);
+ pts.forEach((pt,i)=>{const s=pr(pt);ctx.beginPath();ctx.arc(s.x,s.y,i===0?8:6,0,Math.PI*2);ctx.fillStyle=i===0?"#172b4d":"#fff";ctx.fill();ctx.lineWidth=2;ctx.strokeStyle=i===0?"#172b4d":"#175cd3";ctx.stroke();ctx.fillStyle="#243247";ctx.font="bold 12px system-ui";ctx.fillText(i===0?"BASE":"J"+i,s.x+7,s.y-7);});
+ const end=pts[7],hand=data.tool;line(ctx,end,hand,pr,"#e87919",4);const hp=pr(hand);ctx.beginPath();ctx.arc(hp.x,hp.y,7,0,Math.PI*2);ctx.fillStyle="#e87919";ctx.fill();ctx.fillStyle="#9a4b08";ctx.font="bold 12px system-ui";ctx.fillText("HAND",hp.x+8,hp.y+14);
+ ctx.fillStyle="#475467";ctx.font="12px system-ui";ctx.fillText("Proyeksi ilustratif · geometri dalam meter",14,22);
+}
+function update(){
+ const d=compute();d.q.forEach((v,i)=>$("qval"+i).textContent=Math.round(v)+"°");
+ $("outX7").textContent=fmt(d.T[0][3]);$("outY7").textContent=fmt(d.T[1][3]);$("outZ7").textContent=fmt(d.T[2][3]);
+ $("outRoll7").textContent=fmt(d.rpy[0],1);$("outPitch7").textContent=fmt(d.rpy[1],1);$("outYaw7").textContent=fmt(d.rpy[2],1);
+ $("outXH").textContent=fmt(d.tool[0]);$("outYH").textContent=fmt(d.tool[1]);$("outZH").textContent=fmt(d.tool[2]);
+ $("matrixOut").textContent=matrixString(d.T);renderFrames(d.frames);renderMatrices(d.mats);draw(d);
+}
+function setQ(values){values.forEach((v,i)=>$("q"+i).value=v);update();}
+function resetDH(){defaultDH.forEach((r,i)=>{ $("a"+i).value=r.a;$("d"+i).value=r.d;$("alpha"+i).value=r.alpha;$("off"+i).value=r.off;});update();}
+function stop(){animToken++;if(animFrame!==null)cancelAnimationFrame(animFrame);animFrame=null;}
+function animate(){
+ stop();const token=animToken,poses=[[0,-45,0,-135,0,90,45],[25,-35,25,-120,30,100,-20],[-25,-55,-25,-145,-30,75,20],[0,-45,0,-135,0,90,45]];
+ let index=0,start=getQ(),startTime=null,duration=900;
+ function frame(ts){if(token!==animToken)return;if(startTime===null)startTime=ts;const t=Math.min(1,(ts-startTime)/duration),e=t*t*(3-2*t),target=poses[index];setQ(start.map((v,i)=>v+(target[i]-v)*e));
+ if(t<1)animFrame=requestAnimationFrame(frame);else{index++;if(index>=poses.length){animFrame=null;return;}start=target.slice();startTime=null;animFrame=requestAnimationFrame(frame);}}
+ animFrame=requestAnimationFrame(frame);
+}
+for(let i=0;i<7;i++){
+ $("q"+i).addEventListener("input",()=>{stop();update();});
+ ["a","d","alpha","off"].forEach(prefix=>$(prefix+i).addEventListener("input",()=>{stop();update();}));
+}
+$("resetBtn").addEventListener("click",()=>{stop();setQ(defaultQ);});
+$("sampleBtn").addEventListener("click",()=>{stop();setQ(defaultQ);});
+$("animateBtn").addEventListener("click",animate);$("stopBtn").addEventListener("click",stop);
+$("defaultDhBtn").addEventListener("click",()=>{stop();resetDH();});
+$("exercise1Btn").addEventListener("click",()=>{stop();setQ(defaultQ);$("exercise1Note").textContent="Konfigurasi diterapkan. Catat posisi frame 7, posisi hand mount, orientasi, dan matriks T₀₇. Bandingkan dengan perhitungan manual.";});
+$("checkFKBtn").addEventListener("click",()=>{const r=$("quizFKResult");if($("quizFK").value==="fk"){r.textContent="Benar. Forward Kinematics menghitung pose dari sudut joint yang diketahui.";r.className="good";}else if($("quizFK").value==="ik"){r.textContent="Belum tepat. Inverse Kinematics mencari sudut dari pose target.";r.className="bad";}else{r.textContent="Pilih jawaban terlebih dahulu.";r.className="muted";}});
+$("checkRadBtn").addEventListener("click",()=>{const v=Number($("radQuiz").value),r=$("radQuizResult");if($("radQuiz").value!==""&&Math.abs(v+Math.PI/4)<.03){r.textContent="Benar: −45° = −π/4 ≈ −0,7854 radian.";r.className="good";}else{r.textContent="Coba lagi: θ(rad) = θ(derajat) × π/180. Hasil −45° sekitar −0,7854.";r.className="bad";}});
+update();
+})();
+</script>
+</body></html>
